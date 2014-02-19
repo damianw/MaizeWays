@@ -10,4 +10,10 @@
     <string name="action_example">Example action</string>
     <string name="action_settings">Settings</string>
 
+    <!-- MBus Business -->
+    <string name="mbus_api_url">http://mbus.pts.umich.edu/api/v0/</string>
+    <string name="mbus_buses_endpoint">http://mbus.pts.umich.edu/api/v0/buses/</string>
+    <string name="mbus_stops_endpoint">http://mbus.pts.umich.edu/api/v0/stops/</string>
+    <!-- End MBus Business-->
+
 </resources>

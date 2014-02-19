@@ -1,8 +1,10 @@
 package com.damianw.maizeways.android.data;
 
+import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.damianw.maizeways.android.R;
 import com.google.gson.Gson;
 
 import org.apache.http.HttpResponse;
@@ -14,39 +16,56 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.HashMap;
 
 /**
  * Created by damian on 2/18/14.
  */
-public class MBusTask<ResponseType extends MBusResponse> extends AsyncTask<String, Void, ResponseType> {
+public class MBusTask extends AsyncTask<Object, Void, MBusResponse> {
 
-    public Class<ResponseType> mClassType;
-    public MBusTask(Class<ResponseType> classType) {
+    private Context mContext;
+    private HashMap<
+            Class<? extends MBusResponse>,
+            String
+            > mURLs = new HashMap<Class<? extends MBusResponse>, String>();
+
+    public Class<? extends MBusResponse> mClassType;
+    public MBusTask(Class<? extends MBusResponse> classType, Context context) {
         mClassType = classType;
+        mContext = context;
+        // Add the URLs
+        mURLs.put(BusesResponse.class, mContext.getString(R.string.mbus_buses_endpoint));
+        mURLs.put(StopsResponse.class, mContext.getString(R.string.mbus_stops_endpoint));
     }
 
     @Override
-    protected ResponseType doInBackground(String... params) {
+    protected MBusResponse doInBackground(Object... params) {
         HttpResponse response = null;
         HttpClient httpclient = new DefaultHttpClient();
+        String url = mURLs.get(mClassType);
         try {
-            HttpGet httpget = new HttpGet(params[0]);
+            Log.d("MBusTask", url);
+            HttpGet httpget = new HttpGet(url);
             response = httpclient.execute(httpget);
-        } catch (ClientProtocolException es)
-        {
+        } catch (ClientProtocolException es) {
             Log.e("x", es.getMessage());
-        } catch (IOException e)
-        {
+        } catch (IOException e) {
             Log.e("aasx" , e.getMessage());
         }
         Gson gson = new Gson();
-        ResponseType typedResponse = null;
+        MBusResponse typedResponse = null;
         try {
             InputStreamReader isr = new InputStreamReader(response.getEntity().getContent());
             final BufferedReader reader = new BufferedReader(isr);
             typedResponse = gson.fromJson(reader, mClassType);
         } catch (IOException e) {
             Log.e("aasx" , e.getMessage());
+        }
+        if (typedResponse instanceof StopsResponse) {
+            StopsResponse stopsResponse = (StopsResponse) typedResponse;
+            for (StopsResponse.Stop stop : stopsResponse.response) {
+                Log.d("MBusTask", stop.unique_name);
+            }
         }
         return typedResponse;
     }
