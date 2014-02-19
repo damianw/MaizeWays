@@ -36,6 +36,7 @@ public class MBusTask extends AsyncTask<Object, Void, MBusResponse> {
         // Add the URLs
         mURLs.put(BusesResponse.class, mContext.getString(R.string.mbus_buses_endpoint));
         mURLs.put(StopsResponse.class, mContext.getString(R.string.mbus_stops_endpoint));
+        mURLs.put(RoutesResponse.class, mContext.getString(R.string.mbus_routes_endpoint));
     }
 
     @Override

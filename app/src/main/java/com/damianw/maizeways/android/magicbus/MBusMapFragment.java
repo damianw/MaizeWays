@@ -17,6 +17,7 @@ import android.view.ViewTreeObserver;
 import com.damianw.maizeways.android.data.BusesResponse;
 import com.damianw.maizeways.android.data.MBusResponse;
 import com.damianw.maizeways.android.data.MBusTask;
+import com.damianw.maizeways.android.data.RoutesResponse;
 import com.damianw.maizeways.android.data.StopsResponse;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -27,9 +28,6 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
 
 public class MBusMapFragment extends MapFragment {
 
@@ -40,8 +38,9 @@ public class MBusMapFragment extends MapFragment {
     private LatLngBounds mVenue;
     private ArrayList<Marker> mMarkers;
 
-    private HashMap<Class<? extends MBusResponse>, List> mData = new HashMap<Class<? extends MBusResponse>, List>();
-//    private BusesResponse.Bus[] mBuses;
+    private BusesResponse.Bus[] mBuses;
+    private StopsResponse.Stop[] mStops;
+    private RoutesResponse.Route[] mRoutes;
 
     public MBusMapFragment() { super(); }
 
@@ -64,8 +63,9 @@ public class MBusMapFragment extends MapFragment {
             }
         });
 
-        mData.put(BusesResponse.class, new ArrayList());
-        mData.put(StopsResponse.class, new ArrayList());
+        mBuses = new BusesResponse.Bus[0];
+        mStops = new StopsResponse.Stop[0];
+        mRoutes = new RoutesResponse.Route[0];
 
         return mView;
     }
@@ -73,6 +73,7 @@ public class MBusMapFragment extends MapFragment {
     public void loadData() {
         loadFromResponse(BusesResponse.class);
         loadFromResponse(StopsResponse.class);
+        loadFromResponse(RoutesResponse.class);
     }
 
     private void loadFromResponse(final Class<? extends MBusResponse> responseType) {
@@ -80,49 +81,58 @@ public class MBusMapFragment extends MapFragment {
             @Override
             protected void onPostExecute(MBusResponse mBusResponse) {
                 // TODO: check for null pointer, etc
-                mData.put(responseType, Arrays.asList(responseType.cast(mBusResponse).response));
-                presentData(responseType);
+                if (mBusResponse instanceof BusesResponse) {
+                    mBuses = ((BusesResponse)mBusResponse).response;
+                    initBuses();
+                }
+                else if (mBusResponse instanceof StopsResponse) {
+                    mStops = ((StopsResponse)mBusResponse).response;
+                    initStops();
+                }
+                else if (mBusResponse instanceof RoutesResponse) {
+                    mRoutes = ((RoutesResponse)mBusResponse).response;
+                    initRoutes();
+                }
             }
         };
         task.execute();
     }
 
-    private void presentData(final Class<? extends MBusResponse> responseType) {
+    private void initBuses() {
         mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
         mMap.setMyLocationEnabled(true);
-        for (BusesResponse.Bus bus : getBuses()) {
+        for (BusesResponse.Bus bus : mBuses) {
             LatLng coordinates = new LatLng(bus.latitude, bus.longitude);
             MarkerOptions options = new MarkerOptions()
                     .position(coordinates)
                     .title(bus.route_name)
-                    // TODO: add useful stuff here
+                            // TODO: add useful stuff here
                     .snippet("wat");
             mMarkers.add(mMap.addMarker(options));
         }
-        List<StopsResponse.Stop> stops = getStops();
+    }
+
+    private void initRoutes() {
+
+    }
+
+    private void initStops() {
+        mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+        mMap.setMyLocationEnabled(true);
         LatLngBounds.Builder builder = LatLngBounds.builder();
-        for (StopsResponse.Stop stop: stops) {
+        for (StopsResponse.Stop stop: mStops) {
             LatLng coordinates = new LatLng(stop.latitude, stop.longitude);
-            MarkerOptions options = new MarkerOptions()
-                    .position(coordinates)
-                    .title(stop.human_name)
-                            // TODO: add useful stuff here
-                    .snippet(stop.unique_name);
-            mMarkers.add(mMap.addMarker(options));
+//            MarkerOptions options = new MarkerOptions()
+//                    .position(coordinates)
+//                    .title(stop.human_name)
+//                            // TODO: add useful stuff here
+//                    .snippet(stop.unique_name);
+//            mMarkers.add(mMap.addMarker(options));
             builder.include(coordinates);
         }
-        if (!stops.isEmpty()) {
+        if (mStops.length != 0) {
             mVenue = builder.build();
             mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(mVenue, mPadding));
         }
     }
-
-    public List<StopsResponse.Stop> getStops() {
-        return (List<StopsResponse.Stop>)(mData.get(StopsResponse.class));
-    }
-
-    public List<BusesResponse.Bus> getBuses() {
-        return (List<BusesResponse.Bus>)(mData.get(BusesResponse.class));
-    }
-
 }

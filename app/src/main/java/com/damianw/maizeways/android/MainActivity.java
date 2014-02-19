@@ -3,7 +3,6 @@ package com.damianw.maizeways.android;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.Fragment;
-import android.app.FragmentManager;
 import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
 import android.view.LayoutInflater;
@@ -13,6 +12,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.damianw.maizeways.android.data.BusesResponse;
+import com.damianw.maizeways.android.data.RoutesResponse;
+import com.damianw.maizeways.android.data.StopsResponse;
 import com.damianw.maizeways.android.magicbus.MBusMapFragment;
 import com.damianw.maizeways.android.navigation.NavigationDrawerFragment;
 
@@ -33,13 +35,20 @@ public class MainActivity extends Activity
 
     private ArrayList<Fragment> mFragments;
 
+    private BusesResponse.Bus[] mBuses;
+    private StopsResponse.Stop[] mStops;
+    private RoutesResponse.Route[] mRoutes;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        mBuses = new BusesResponse.Bus[0];
+        mStops = new StopsResponse.Stop[0];
+        mRoutes = new RoutesResponse.Route[0];
+
         mFragments = new ArrayList<Fragment>();
-        mFragments.add(new MBusMapFragment());
         mFragments.add(new MBusMapFragment());
         mFragments.add(new MBusMapFragment());
         mFragments.add(new MBusMapFragment());
@@ -58,10 +67,7 @@ public class MainActivity extends Activity
     @Override
     public void onNavigationDrawerItemSelected(int position) {
         // update the main content by replacing fragments
-        FragmentManager fragmentManager = getFragmentManager();
-        fragmentManager.beginTransaction()
-                .replace(R.id.container, mFragments.get(position), String.valueOf(position))
-                .commit();
+
     }
 
     public void onSectionAttached(int number) {
