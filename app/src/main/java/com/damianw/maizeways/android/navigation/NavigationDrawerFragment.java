@@ -2,7 +2,6 @@ package com.damianw.maizeways.android.navigation;
 
 
 import android.app.ActionBar;
-import android.app.Activity;
 import android.app.Fragment;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
@@ -193,11 +192,9 @@ public class NavigationDrawerFragment extends Fragment {
         }
     }
 
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
+    public void setCallbacks(NavigationDrawerCallbacks callback) {
         try {
-            mCallbacks = (NavigationDrawerCallbacks) activity;
+            mCallbacks = callback;
         } catch (ClassCastException e) {
             throw new ClassCastException("Activity must implement NavigationDrawerCallbacks.");
         }

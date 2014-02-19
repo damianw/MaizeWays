@@ -62,12 +62,6 @@ public class MBusTask extends AsyncTask<Object, Void, MBusResponse> {
         } catch (IOException e) {
             Log.e("aasx" , e.getMessage());
         }
-        if (typedResponse instanceof StopsResponse) {
-            StopsResponse stopsResponse = (StopsResponse) typedResponse;
-            for (StopsResponse.Stop stop : stopsResponse.response) {
-                Log.d("MBusTask", stop.unique_name);
-            }
-        }
         return typedResponse;
     }
 }
