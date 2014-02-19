@@ -5,12 +5,17 @@ package com.damianw.maizeways.android.data;
  */
 
 public class BusesResponse extends MBusResponse<BusesResponse.Bus> {
-    public class Bus {
+    public class Bus implements Comparable<Bus> {
         public int id;
         public double latitude;
         public double longitude;
         public int heading;
         public int route;
         public String route_name;
+
+        @Override
+        public int compareTo(Bus bus) {
+            return route_name.compareTo(bus.route_name);
+        }
     }
 }

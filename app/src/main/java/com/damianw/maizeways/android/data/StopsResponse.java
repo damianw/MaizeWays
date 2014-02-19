@@ -5,7 +5,7 @@ package com.damianw.maizeways.android.data;
  */
 
 public class StopsResponse extends MBusResponse<StopsResponse.Stop> {
-    public class Stop {
+    public class Stop implements Comparable<Stop> {
         public int id;
         public String unique_name;
         public String human_name;
@@ -13,5 +13,10 @@ public class StopsResponse extends MBusResponse<StopsResponse.Stop> {
         public double latitude;
         public double longitude;
         public int heading;
+
+        @Override
+        public int compareTo(Stop stop) {
+            return human_name.compareTo(stop.human_name);
+        }
     }
 }

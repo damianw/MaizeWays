@@ -3,6 +3,7 @@ package com.damianw.maizeways.android;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.Fragment;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
 import android.view.LayoutInflater;
@@ -13,20 +14,31 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.damianw.maizeways.android.data.BusesResponse;
+import com.damianw.maizeways.android.data.MBusResponse;
+import com.damianw.maizeways.android.data.MBusTask;
 import com.damianw.maizeways.android.data.RoutesResponse;
 import com.damianw.maizeways.android.data.StopsResponse;
-import com.damianw.maizeways.android.magicbus.MBusMapFragment;
-import com.damianw.maizeways.android.navigation.NavigationDrawerFragment;
+import com.damianw.maizeways.android.navigation.RoutesDrawerFragment;
+import com.damianw.maizeways.android.navigation.StopsDrawerFragment;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class MainActivity extends Activity
-        implements NavigationDrawerFragment.NavigationDrawerCallbacks {
+        implements RoutesDrawerFragment.NavigationDrawerCallbacks {
 
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
      */
-    private NavigationDrawerFragment mNavigationDrawerFragment;
+    private RoutesDrawerFragment mNavigationDrawerFragment;
+    private StopsDrawerFragment mStopsDrawerFragment;
 
     /**
      * Used to store the last screen title. For use in {@link #restoreActionBar()}.
@@ -39,6 +51,12 @@ public class MainActivity extends Activity
     private StopsResponse.Stop[] mStops;
     private RoutesResponse.Route[] mRoutes;
 
+    private GoogleMap mMap;
+    private ArrayList<Marker> mMarkers;
+    private LatLngBounds mVenue;
+
+    private int mPadding;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,41 +65,99 @@ public class MainActivity extends Activity
         mBuses = new BusesResponse.Bus[0];
         mStops = new StopsResponse.Stop[0];
         mRoutes = new RoutesResponse.Route[0];
+        mMarkers = new ArrayList();
 
-        mFragments = new ArrayList<Fragment>();
-        mFragments.add(new MBusMapFragment());
-        mFragments.add(new MBusMapFragment());
-        mFragments.add(new MBusMapFragment());
+        mPadding = 80 * getResources().getDisplayMetrics().densityDpi / 160;
 
+        mMap = ((MapFragment) getFragmentManager().findFragmentById(R.id.mbus_map_fragment)).getMap();
 
-        mNavigationDrawerFragment = (NavigationDrawerFragment)
+        mNavigationDrawerFragment = (RoutesDrawerFragment)
                 getFragmentManager().findFragmentById(R.id.navigation_drawer);
+        mStopsDrawerFragment = (StopsDrawerFragment)
+                getFragmentManager().findFragmentById(R.id.stops_drawer);
         mTitle = getTitle();
-
         // Set up the drawer.
         mNavigationDrawerFragment.setUp(
                 R.id.navigation_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
+        mStopsDrawerFragment.setUp(
+                R.id.stops_drawer,
+                (DrawerLayout) findViewById(R.id.drawer_layout));
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadData();
+    }
+
+    public void loadData() {
+        loadFromResponse(BusesResponse.class);
+        loadFromResponse(StopsResponse.class);
+        loadFromResponse(RoutesResponse.class);
+    }
+
+    private void loadFromResponse(final Class<? extends MBusResponse> responseType) {
+        AsyncTask task = new MBusTask(responseType, this) {
+            @Override
+            protected void onPostExecute(MBusResponse mBusResponse) {
+                // TODO: check for null pointer, etc
+                if (mBusResponse instanceof BusesResponse) {
+                    mBuses = ((BusesResponse)mBusResponse).response;
+                    initBuses();
+                }
+                else if (mBusResponse instanceof StopsResponse) {
+                    mStops = ((StopsResponse)mBusResponse).response;
+                    Arrays.sort(mStops);
+                    initStops();
+                }
+                else if (mBusResponse instanceof RoutesResponse) {
+                    mRoutes = ((RoutesResponse)mBusResponse).response;
+                    Arrays.sort(mRoutes);
+                    initRoutes();
+                }
+            }
+        };
+        task.execute();
+    }
+
+    private void initBuses() {
+        mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+        mMap.setMyLocationEnabled(true);
+        for (BusesResponse.Bus bus : mBuses) {
+            LatLng coordinates = new LatLng(bus.latitude, bus.longitude);
+            MarkerOptions options = new MarkerOptions()
+                    .position(coordinates)
+                    .title(bus.route_name)
+                            // TODO: add useful stuff here
+                    .snippet("wat");
+            mMarkers.add(mMap.addMarker(options));
+        }
+    }
+
+    private void initRoutes() {
+        mNavigationDrawerFragment.setRoutes(mRoutes);
+    }
+
+    private void initStops() {
+        mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+        mMap.setMyLocationEnabled(true);
+        LatLngBounds.Builder builder = LatLngBounds.builder();
+        for (StopsResponse.Stop stop: mStops) {
+            LatLng coordinates = new LatLng(stop.latitude, stop.longitude);
+            builder.include(coordinates);
+        }
+        if (mStops.length != 0) {
+            mVenue = builder.build();
+            mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(mVenue, mPadding));
+        }
+        mStopsDrawerFragment.setStops(mStops);
     }
 
     @Override
     public void onNavigationDrawerItemSelected(int position) {
         // update the main content by replacing fragments
 
-    }
-
-    public void onSectionAttached(int number) {
-        switch (number) {
-            case 1:
-                mTitle = getString(R.string.title_section1);
-                break;
-            case 2:
-                mTitle = getString(R.string.title_section2);
-                break;
-            case 3:
-                mTitle = getString(R.string.title_section3);
-                break;
-        }
     }
 
     public void restoreActionBar() {
@@ -151,12 +227,12 @@ public class MainActivity extends Activity
             return rootView;
         }
 
-        @Override
-        public void onAttach(Activity activity) {
-            super.onAttach(activity);
-            ((MainActivity) activity).onSectionAttached(
-                    getArguments().getInt(ARG_SECTION_NUMBER));
-        }
+//        @Override
+//        public void onAttach(Activity activity) {
+//            super.onAttach(activity);
+//            ((MainActivity) activity).onSectionAttached(
+//                    getArguments().getInt(ARG_SECTION_NUMBER));
+//        }
     }
 
 }
