@@ -15,6 +15,7 @@ import com.damianw.maizeways.android.R;
 import com.damianw.maizeways.android.data.RoutesResponse;
 
 import java.util.List;
+import java.util.TreeSet;
 
 /**
  * Created by damian on 1/12/14.
@@ -22,14 +23,13 @@ import java.util.List;
 public class RoutesDrawerAdapter extends ArrayAdapter<RoutesResponse.Route> {
     private Context mContext;
     private List<RoutesResponse.Route> mItems;
-    private int mCurrent;
+    private TreeSet<Integer> mSelectedItems = new TreeSet<Integer>();
 
     public RoutesDrawerAdapter(Context context, List<RoutesResponse.Route> items) {
         super(context, R.layout.routes_drawer_item);
 
         mContext = context;
         mItems = items;
-        mCurrent = -1;
     }
 
     @Override
@@ -47,8 +47,12 @@ public class RoutesDrawerAdapter extends ArrayAdapter<RoutesResponse.Route> {
         return mItems.get(position).hashCode();
     }
 
-    public void setSelected(int position, boolean selected) {
-        mCurrent = position;
+    public void clickItem(int position) {
+        if (mSelectedItems.contains(position)) {
+            mSelectedItems.remove(position);
+        } else {
+            mSelectedItems.add(position);
+        }
     }
 
     public View getView(int position, View convertView, ViewGroup parent) {
@@ -66,8 +70,8 @@ public class RoutesDrawerAdapter extends ArrayAdapter<RoutesResponse.Route> {
         TextView text = (TextView) navItemView.findViewById(R.id.routes_drawer_item_text);
         text.setText(item.name);
 
-        if (position == mCurrent) {
-            navItemView.setBackgroundResource(android.R.color.darker_gray);
+        if (mSelectedItems.contains(position)) {
+            navItemView.setBackgroundResource(android.R.color.black);
         } else {
             navItemView.setBackgroundResource(android.R.color.transparent);
         }

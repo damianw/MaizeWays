@@ -171,7 +171,17 @@ public class MainActivity extends Activity
     }
 
     private void refreshBuses() {
+        HashMap<Integer, RoutesResponse.Route> selectedRoutes = mRoutesDrawerFragment.getSelectedRoutes();
         for (BusesResponse.Bus bus : mBuses) {
+            // if it's not on a selected route, remove it if possible, then continue
+            // unless no routes are selected, in which case, show all buses
+            if (!selectedRoutes.containsKey(bus.route) && !selectedRoutes.isEmpty()) {
+                if (mBusMarkers.containsKey(bus.id)) {
+                    mBusMarkers.get(bus.id).remove();
+                    mBusMarkers.remove(bus.id);
+                }
+                continue;
+            }
             LatLng coordinates = new LatLng(bus.latitude, bus.longitude);
             if (mBusMarkers.containsKey(bus.id)) {
                 mBusMarkers.get(bus.id).setPosition(coordinates);
@@ -252,7 +262,7 @@ public class MainActivity extends Activity
     }
 
     @Override
-    public void onRoutesItemSelected(int position) {
-
+    public void updateSelectedRoutes() {
+        refreshBuses();
     }
 }

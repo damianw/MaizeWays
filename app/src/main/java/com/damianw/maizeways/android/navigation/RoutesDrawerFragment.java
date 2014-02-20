@@ -4,12 +4,14 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 
 import com.damianw.maizeways.android.data.RoutesResponse;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.TreeSet;
 
 /**
  * Created by damian on 2/18/14.
@@ -18,7 +20,7 @@ public class RoutesDrawerFragment extends NavigationDrawerFragment {
     private RoutesResponse.Route[] mRoutes = new RoutesResponse.Route[0];
     private ArrayList<RoutesDrawerCallback> mCallbacks = new ArrayList<RoutesDrawerCallback>();
     private RoutesDrawerAdapter mAdapter;
-    private HashMap<Integer, Boolean> mSelectedRoutes = new HashMap<Integer, Boolean>();
+    private TreeSet<Integer> mSelectedRoutes = new TreeSet<Integer>();
 
     public RoutesDrawerFragment() {
     }
@@ -26,12 +28,12 @@ public class RoutesDrawerFragment extends NavigationDrawerFragment {
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-//        mDrawerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-//            @Override
-//            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//                selectItem(position);
-//            }
-//        });
+        mDrawerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                clickItem(position);
+            }
+        });
     }
 
     public void setRoutes(RoutesResponse.Route[] routes) {
@@ -44,21 +46,23 @@ public class RoutesDrawerFragment extends NavigationDrawerFragment {
         mDrawerListView.setAdapter(mAdapter);
     }
 
-    private void selectItem(int position) {
-        if (!mSelectedRoutes.containsKey(position)) {
-            mSelectedRoutes.put(position, false);
-        }
-        boolean currentlySelected = mSelectedRoutes.get(position);
+    private void clickItem(int position) {
+        boolean currentlySelected = mSelectedRoutes.contains(position);
         Log.d("RoutesDrawerFragment", position + " is now " + !currentlySelected);
         if (mDrawerListView != null) {
             mDrawerListView.setItemChecked(position, !currentlySelected);
             // TODO: fix this
-            mAdapter.setSelected(position, !currentlySelected);
+            mAdapter.clickItem(position);
         }
         if (mCallbacks != null) {
             for (RoutesDrawerCallback callback : mCallbacks) {
-                callback.onRoutesItemSelected(position);
+                callback.updateSelectedRoutes();
             }
+        }
+        if (currentlySelected) {
+            mSelectedRoutes.remove(position);
+        } else {
+            mSelectedRoutes.add(position);
         }
     }
 
@@ -72,8 +76,16 @@ public class RoutesDrawerFragment extends NavigationDrawerFragment {
         }
     }
 
+    public HashMap<Integer, RoutesResponse.Route> getSelectedRoutes() {
+        HashMap<Integer, RoutesResponse.Route> result = new HashMap<Integer, RoutesResponse.Route>();
+        for (int index : mSelectedRoutes) {
+            result.put(mRoutes[index].id, mRoutes[index]);
+        }
+        return result;
+    }
+
     public interface RoutesDrawerCallback {
-        public void onRoutesItemSelected(int position);
+        public void updateSelectedRoutes();
     }
 
 }
