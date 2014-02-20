@@ -45,7 +45,7 @@ public class MBusTask extends AsyncTask<Object, Void, MBusResponse> {
         HttpClient httpclient = new DefaultHttpClient();
         String url = mURLs.get(mClassType);
         try {
-            Log.d("MBusTask", url);
+//            Log.d("MBusTask", url);
             HttpGet httpget = new HttpGet(url);
             response = httpclient.execute(httpget);
         } catch (ClientProtocolException es) {

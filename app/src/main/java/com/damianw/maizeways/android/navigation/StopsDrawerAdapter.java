@@ -7,14 +7,14 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.damianw.maizeways.android.R;
-import com.damianw.maizeways.android.data.RoutesResponse;
+import com.damianw.maizeways.android.data.StopsResponse;
 
 /**
  * Created by damian on 2/19/14.
  */
-public class RoutesDrawerAdapter extends MBusDrawerAdapter<RoutesResponse.Route> {
+public class StopsDrawerAdapter extends MBusDrawerAdapter<StopsResponse.Stop> {
 
-    public RoutesDrawerAdapter(Context context, NavigationDrawerFragment parent) {
+    public StopsDrawerAdapter(Context context, NavigationDrawerFragment parent) {
         super(context, parent);
     }
 
@@ -23,15 +23,20 @@ public class RoutesDrawerAdapter extends MBusDrawerAdapter<RoutesResponse.Route>
 
         View navItemView;
         if (convertView == null) {
-            navItemView = inflater.inflate(R.layout.routes_drawer_item, null);
+            navItemView = inflater.inflate(R.layout.stops_drawer_item, null);
         } else {
             navItemView = convertView;
         }
 
-        RoutesResponse.Route item = getItems().get(position);
+        // debug, remove later
+        if (position - 1> getItems().size()) {
+            return navItemView;
+        }
 
-        TextView text = (TextView) navItemView.findViewById(R.id.routes_drawer_item_text);
-        text.setText(item.name);
+        StopsResponse.Stop item = getItems().get(position);
+
+        TextView text = (TextView) navItemView.findViewById(R.id.stops_drawer_item_text);
+        text.setText(item.human_name);
 
         if (getSelectedItems().contains(position)) {
             navItemView.setBackgroundResource(android.R.color.black);

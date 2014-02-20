@@ -5,7 +5,7 @@ package com.damianw.maizeways.android.data;
  */
 
 public class RoutesResponse extends MBusResponse<RoutesResponse.Route> {
-    public class Route implements Comparable<Route> {
+    public class Route implements Comparable<Route>, HasID {
         public int id;
         public String name;
         public String color;

@@ -21,7 +21,10 @@ import com.damianw.maizeways.android.data.MBusResponse;
 import com.damianw.maizeways.android.data.MBusTask;
 import com.damianw.maizeways.android.data.RoutesResponse;
 import com.damianw.maizeways.android.data.StopsResponse;
+import com.damianw.maizeways.android.navigation.NavigationDrawerFragment;
+import com.damianw.maizeways.android.navigation.RoutesDrawerAdapter;
 import com.damianw.maizeways.android.navigation.RoutesDrawerFragment;
+import com.damianw.maizeways.android.navigation.StopsDrawerAdapter;
 import com.damianw.maizeways.android.navigation.StopsDrawerFragment;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -35,12 +38,13 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class MainActivity extends Activity
-        implements RoutesDrawerFragment.RoutesDrawerCallback {
+public class MainActivity extends Activity {
 
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
@@ -55,9 +59,9 @@ public class MainActivity extends Activity
 
     private ArrayList<Fragment> mFragments;
 
-    private BusesResponse.Bus[] mBuses;
-    private StopsResponse.Stop[] mStops;
-    private RoutesResponse.Route[] mRoutes;
+    private List<BusesResponse.Bus> mBuses;
+    private List<StopsResponse.Stop> mStops;
+    private List<RoutesResponse.Route> mRoutes;
 
     private HashMap<Integer, BusesResponse.Bus> mBusMap;
     private HashMap<Integer, StopsResponse.Stop> mStopMap;
@@ -77,9 +81,9 @@ public class MainActivity extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mBuses = new BusesResponse.Bus[0];
-        mStops = new StopsResponse.Stop[0];
-        mRoutes = new RoutesResponse.Route[0];
+        mBuses = new ArrayList();
+        mStops = new ArrayList();
+        mRoutes = new ArrayList();
         mBusMarkers = new HashMap<Integer, Marker>();
 
         mBusMap = new HashMap<Integer, BusesResponse.Bus>();
@@ -96,12 +100,28 @@ public class MainActivity extends Activity
         mStopsDrawerFragment = (StopsDrawerFragment)
                 getFragmentManager().findFragmentById(R.id.stops_drawer);
         mTitle = getTitle();
-        // Set up the drawers.
+
+        NavigationDrawerFragment.NavigationDrawerCallback routesCallback
+                = new NavigationDrawerFragment.NavigationDrawerCallback() {
+            @Override
+            public void updateSelectedItems() {
+                refreshBuses();
+            }
+        };
+        NavigationDrawerFragment.NavigationDrawerCallback stopsCallback
+                = new NavigationDrawerFragment.NavigationDrawerCallback() {
+            @Override
+            public void updateSelectedItems() {
+//                refreshBuses();
+                Log.d("MainActivity", "Implement this!");
+            }
+        };
+        // Set up the drawers and their respective callbacks
         mRoutesDrawerFragment.setUp(
-                R.id.routes_drawer,
+                routesCallback, new RoutesDrawerAdapter(this, mRoutesDrawerFragment), R.id.routes_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
         mStopsDrawerFragment.setUp(
-                R.id.stops_drawer,
+                stopsCallback, new StopsDrawerAdapter(this, mStopsDrawerFragment), R.id.stops_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
     }
 
@@ -114,7 +134,7 @@ public class MainActivity extends Activity
         TimerTask task = new TimerTask(){
             @Override
             public void run(){
-                Log.d("MapRefresh", "Bus refresh on thread " + Thread.currentThread().getName());
+//                Log.d("MapRefresh", "Bus refresh on thread " + Thread.currentThread().getName());
                 loadFromResponse(BusesResponse.class);
             }
         };
@@ -140,7 +160,7 @@ public class MainActivity extends Activity
             protected void onPostExecute(MBusResponse mBusResponse) {
                 // TODO: check for null pointer, etc
                 if (mBusResponse instanceof BusesResponse) {
-                    mBuses = ((BusesResponse)mBusResponse).response;
+                    mBuses = Arrays.asList(((BusesResponse)mBusResponse).response);
                     mBusMap = new HashMap<Integer, BusesResponse.Bus>();
                     for (BusesResponse.Bus bus : mBuses) {
                         mBusMap.put(bus.id, bus);
@@ -148,21 +168,21 @@ public class MainActivity extends Activity
                     refreshBuses();
                 }
                 else if (mBusResponse instanceof StopsResponse) {
-                    mStops = ((StopsResponse)mBusResponse).response;
+                    mStops = Arrays.asList(((StopsResponse)mBusResponse).response);
                     mStopMap = new HashMap<Integer, StopsResponse.Stop>();
                     for (StopsResponse.Stop stop : mStops) {
                         mStopMap.put(stop.id, stop);
                     }
-                    Arrays.sort(mStops);
+                    Collections.sort(mStops);
                     refreshStops();
                 }
                 else if (mBusResponse instanceof RoutesResponse) {
-                    mRoutes = ((RoutesResponse)mBusResponse).response;
+                    mRoutes = Arrays.asList(((RoutesResponse)mBusResponse).response);
                     mRouteMap = new HashMap<Integer, RoutesResponse.Route>();
                     for (RoutesResponse.Route route : mRoutes) {
                         mRouteMap.put(route.id, route);
                     }
-                    Arrays.sort(mRoutes);
+                    Collections.sort(mRoutes);
                     refreshRoutes();
                 }
             }
@@ -171,7 +191,7 @@ public class MainActivity extends Activity
     }
 
     private void refreshBuses() {
-        HashMap<Integer, RoutesResponse.Route> selectedRoutes = mRoutesDrawerFragment.getSelectedRoutes();
+        HashMap<Integer, RoutesResponse.Route> selectedRoutes = mRoutesDrawerFragment.getSelectedItems();
         for (BusesResponse.Bus bus : mBuses) {
             // if it's not on a selected route, remove it if possible, then continue
             // unless no routes are selected, in which case, show all buses
@@ -212,7 +232,7 @@ public class MainActivity extends Activity
     }
 
     private void refreshRoutes() {
-        mRoutesDrawerFragment.setRoutes(mRoutes);
+        mRoutesDrawerFragment.setItems(mRoutes);
     }
 
     private void refreshStops() {
@@ -221,11 +241,11 @@ public class MainActivity extends Activity
             LatLng coordinates = new LatLng(stop.latitude, stop.longitude);
             builder.include(coordinates);
         }
-        if (mStops.length != 0) {
+        if (!mStops.isEmpty()) {
             mVenue = builder.build();
             mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(mVenue, mPadding));
         }
-        mStopsDrawerFragment.setStops(mStops);
+        mStopsDrawerFragment.setItems(mStops);
     }
 
     public void restoreActionBar() {
@@ -259,10 +279,5 @@ public class MainActivity extends Activity
             return true;
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public void updateSelectedRoutes() {
-        refreshBuses();
     }
 }
