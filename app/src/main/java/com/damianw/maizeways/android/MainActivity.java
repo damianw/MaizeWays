@@ -300,6 +300,8 @@ public class MainActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
+    // TODO: DRY up this code
+
     public void launchRouteDetailActivity(RoutesResponse.Route route) {
         Toast.makeText(this, "Route info for: " + route.name, Toast.LENGTH_SHORT).show();
         Intent intent = new Intent(this, RouteDetailActivity.class);

@@ -22,7 +22,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.damianw.maizeways.android.R;
-import com.damianw.maizeways.android.data.HasID;
+import com.damianw.maizeways.android.data.MBusDataModel;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,7 +34,7 @@ import java.util.TreeSet;
  * See the <a href="https://developer.android.com/design/patterns/navigation-drawer.html#Interaction">
  * design guidelines</a> for a complete explanation of the behaviors implemented here.
  */
-public abstract class NavigationDrawerFragment<ResponseType extends HasID> extends Fragment {
+public abstract class NavigationDrawerFragment<ResponseType extends MBusDataModel> extends Fragment {
 
     /**
      * Remember the position of the selected item.

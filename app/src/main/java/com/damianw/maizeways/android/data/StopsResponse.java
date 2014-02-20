@@ -5,7 +5,7 @@ package com.damianw.maizeways.android.data;
  */
 
 public class StopsResponse extends MBusResponse<StopsResponse.Stop> {
-    public class Stop implements Comparable<Stop>, HasID {
+    public class Stop implements Comparable<Stop>, MBusDataModel {
         public int id;
         public String unique_name;
         public String human_name;

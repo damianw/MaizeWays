@@ -9,14 +9,14 @@ import android.util.Log;
 import android.widget.ArrayAdapter;
 
 import com.damianw.maizeways.android.R;
-import com.damianw.maizeways.android.data.HasID;
+import com.damianw.maizeways.android.data.MBusDataModel;
 
 import java.util.List;
 
 /**
  * Created by damian on 1/12/14.
  */
-public abstract class MBusDrawerAdapter<ResponseType extends HasID> extends ArrayAdapter<ResponseType> {
+public abstract class MBusDrawerAdapter<ResponseType extends MBusDataModel> extends ArrayAdapter<ResponseType> {
     NavigationDrawerFragment mParent;
 
     public MBusDrawerAdapter(Context context, NavigationDrawerFragment<ResponseType> parent) {

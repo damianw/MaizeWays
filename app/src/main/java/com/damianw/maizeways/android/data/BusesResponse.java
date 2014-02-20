@@ -5,7 +5,7 @@ package com.damianw.maizeways.android.data;
  */
 
 public class BusesResponse extends MBusResponse<BusesResponse.Bus> {
-    public class Bus implements Comparable<Bus>, HasID {
+    public class Bus implements Comparable<Bus>, MBusDataModel {
         public int id;
         public double latitude;
         public double longitude;
