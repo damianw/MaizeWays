@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/routes_drawer_item_layout"
+    android:layout_width="match_parent"
+    android:layout_height="48dp"
+    android:padding="6dp">
+    <ImageView
+        android:id="@+id/routes_drawer_item_button"
+        android:layout_alignParentLeft="true"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:adjustViewBounds="true"
+        android:layout_marginRight="8dp"
+        android:layout_marginLeft="4dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:src="@drawable/ic_ab_back_holo_dark_am_left"
+        android:scaleType="fitCenter"/>
+    <TextView
+        android:id="@+id/routes_drawer_item_text"
+        android:layout_toRightOf="@id/routes_drawer_item_button"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:gravity="center_vertical"
+        android:textStyle="bold"
+        android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium.Inverse"/>
+</RelativeLayout>

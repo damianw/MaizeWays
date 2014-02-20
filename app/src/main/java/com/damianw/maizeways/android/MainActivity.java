@@ -39,12 +39,13 @@ import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity
+        implements RoutesDrawerFragment.RoutesDrawerCallback {
 
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
      */
-    private RoutesDrawerFragment mNavigationDrawerFragment;
+    private RoutesDrawerFragment mRoutesDrawerFragment;
     private StopsDrawerFragment mStopsDrawerFragment;
 
     /**
@@ -90,20 +91,18 @@ public class MainActivity extends Activity {
 
         mMap = ((MapFragment) getFragmentManager().findFragmentById(R.id.mbus_map_fragment)).getMap();
 
-        mNavigationDrawerFragment = (RoutesDrawerFragment)
-                getFragmentManager().findFragmentById(R.id.navigation_drawer);
+        mRoutesDrawerFragment = (RoutesDrawerFragment)
+                getFragmentManager().findFragmentById(R.id.routes_drawer);
         mStopsDrawerFragment = (StopsDrawerFragment)
                 getFragmentManager().findFragmentById(R.id.stops_drawer);
         mTitle = getTitle();
         // Set up the drawers.
-        mNavigationDrawerFragment.setUp(
-                R.id.navigation_drawer,
+        mRoutesDrawerFragment.setUp(
+                R.id.routes_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
         mStopsDrawerFragment.setUp(
                 R.id.stops_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
-        mNavigationDrawerFragment.setCallbacks(new RoutesDrawerCallback());
-        mStopsDrawerFragment.setCallbacks(new StopsDrawerCallback());
     }
 
     @Override
@@ -115,17 +114,18 @@ public class MainActivity extends Activity {
         TimerTask task = new TimerTask(){
             @Override
             public void run(){
-                MainActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Log.d("MapRefresh", "The map data is being refreshed.");
-                        loadFromResponse(BusesResponse.class);
-                    }
-                });
+                Log.d("MapRefresh", "Bus refresh on thread " + Thread.currentThread().getName());
+                loadFromResponse(BusesResponse.class);
             }
         };
         mRefreshTimer = new Timer();
-        mRefreshTimer.scheduleAtFixedRate(task, 0, 500);
+        mRefreshTimer.schedule(task, 0, 500);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mRefreshTimer.cancel();
     }
 
     public void loadData() {
@@ -145,7 +145,7 @@ public class MainActivity extends Activity {
                     for (BusesResponse.Bus bus : mBuses) {
                         mBusMap.put(bus.id, bus);
                     }
-                    initBuses();
+                    refreshBuses();
                 }
                 else if (mBusResponse instanceof StopsResponse) {
                     mStops = ((StopsResponse)mBusResponse).response;
@@ -154,7 +154,7 @@ public class MainActivity extends Activity {
                         mStopMap.put(stop.id, stop);
                     }
                     Arrays.sort(mStops);
-                    initStops();
+                    refreshStops();
                 }
                 else if (mBusResponse instanceof RoutesResponse) {
                     mRoutes = ((RoutesResponse)mBusResponse).response;
@@ -163,14 +163,14 @@ public class MainActivity extends Activity {
                         mRouteMap.put(route.id, route);
                     }
                     Arrays.sort(mRoutes);
-                    initRoutes();
+                    refreshRoutes();
                 }
             }
         };
         task.execute();
     }
 
-    private void initBuses() {
+    private void refreshBuses() {
         for (BusesResponse.Bus bus : mBuses) {
             LatLng coordinates = new LatLng(bus.latitude, bus.longitude);
             if (mBusMarkers.containsKey(bus.id)) {
@@ -201,11 +201,11 @@ public class MainActivity extends Activity {
         return BitmapDescriptorFactory.fromBitmap(mDotMarkerBitmap);
     }
 
-    private void initRoutes() {
-        mNavigationDrawerFragment.setRoutes(mRoutes);
+    private void refreshRoutes() {
+        mRoutesDrawerFragment.setRoutes(mRoutes);
     }
 
-    private void initStops() {
+    private void refreshStops() {
         LatLngBounds.Builder builder = LatLngBounds.builder();
         for (StopsResponse.Stop stop: mStops) {
             LatLng coordinates = new LatLng(stop.latitude, stop.longitude);
@@ -228,7 +228,7 @@ public class MainActivity extends Activity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        if (!mNavigationDrawerFragment.isDrawerOpen()) {
+        if (!mRoutesDrawerFragment.isDrawerOpen()) {
             // Only show items in the action bar relevant to this screen
             // if the drawer is not showing. Otherwise, let the drawer
             // decide what to show in the action bar.
@@ -251,18 +251,8 @@ public class MainActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
-    public class RoutesDrawerCallback implements RoutesDrawerFragment.NavigationDrawerCallbacks {
-        @Override
-        public void onNavigationDrawerItemSelected(int position) {
+    @Override
+    public void onRoutesItemSelected(int position) {
 
-        }
     }
-
-    public class StopsDrawerCallback implements StopsDrawerFragment.NavigationDrawerCallbacks {
-        @Override
-        public void onNavigationDrawerItemSelected(int position) {
-
-        }
-    }
-
 }
