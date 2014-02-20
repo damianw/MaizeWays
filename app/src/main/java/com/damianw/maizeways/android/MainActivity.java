@@ -3,6 +3,7 @@ package com.damianw.maizeways.android;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.Fragment;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -15,6 +16,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.damianw.maizeways.android.data.BusesResponse;
 import com.damianw.maizeways.android.data.MBusResponse;
@@ -23,10 +25,7 @@ import com.damianw.maizeways.android.data.RoutesResponse;
 import com.damianw.maizeways.android.data.StopsResponse;
 import com.damianw.maizeways.android.navigation.NavigationDrawerFragment;
 import com.damianw.maizeways.android.navigation.RoutesDrawerAdapter;
-import com.damianw.maizeways.android.navigation.RoutesDrawerFragment;
 import com.damianw.maizeways.android.navigation.StopsDrawerAdapter;
-import com.damianw.maizeways.android.navigation.StopsDrawerFragment;
-import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
@@ -49,8 +48,8 @@ public class MainActivity extends Activity {
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
      */
-    private RoutesDrawerFragment mRoutesDrawerFragment;
-    private StopsDrawerFragment mStopsDrawerFragment;
+    private NavigationDrawerFragment mRoutesDrawerFragment;
+    private NavigationDrawerFragment mStopsDrawerFragment;
 
     /**
      * Used to store the last screen title. For use in {@link #restoreActionBar()}.
@@ -95,9 +94,9 @@ public class MainActivity extends Activity {
 
         mMap = ((MapFragment) getFragmentManager().findFragmentById(R.id.mbus_map_fragment)).getMap();
 
-        mRoutesDrawerFragment = (RoutesDrawerFragment)
+        mRoutesDrawerFragment = (NavigationDrawerFragment)
                 getFragmentManager().findFragmentById(R.id.routes_drawer);
-        mStopsDrawerFragment = (StopsDrawerFragment)
+        mStopsDrawerFragment = (NavigationDrawerFragment)
                 getFragmentManager().findFragmentById(R.id.stops_drawer);
         mTitle = getTitle();
 
@@ -105,6 +104,7 @@ public class MainActivity extends Activity {
                 = new NavigationDrawerFragment.NavigationDrawerCallback() {
             @Override
             public void updateSelectedItems() {
+                mStopsDrawerFragment.clearSelections();
                 refreshBuses();
             }
         };
@@ -112,8 +112,10 @@ public class MainActivity extends Activity {
                 = new NavigationDrawerFragment.NavigationDrawerCallback() {
             @Override
             public void updateSelectedItems() {
-//                refreshBuses();
-                Log.d("MainActivity", "Implement this!");
+                mRoutesDrawerFragment.clearSelections();
+                refreshStops();
+                refreshBuses();
+//                Log.d("MainActivity", "Implement this!");
             }
         };
         // Set up the drawers and their respective callbacks
@@ -123,6 +125,7 @@ public class MainActivity extends Activity {
         mStopsDrawerFragment.setUp(
                 stopsCallback, new StopsDrawerAdapter(this, mStopsDrawerFragment), R.id.stops_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
+
     }
 
     @Override
@@ -139,7 +142,7 @@ public class MainActivity extends Activity {
             }
         };
         mRefreshTimer = new Timer();
-        mRefreshTimer.schedule(task, 0, 500);
+        mRefreshTimer.schedule(task, 0, 1000);
     }
 
     @Override
@@ -168,12 +171,24 @@ public class MainActivity extends Activity {
                     refreshBuses();
                 }
                 else if (mBusResponse instanceof StopsResponse) {
-                    mStops = Arrays.asList(((StopsResponse)mBusResponse).response);
+                    mStops = new ArrayList<StopsResponse.Stop>();
                     mStopMap = new HashMap<Integer, StopsResponse.Stop>();
-                    for (StopsResponse.Stop stop : mStops) {
-                        mStopMap.put(stop.id, stop);
+                    HashMap<Integer, StopsResponse.Stop> stopMap = new HashMap<Integer, StopsResponse.Stop>();
+                    for (StopsResponse.Stop stop : ((StopsResponse)mBusResponse).response) {
+                        stopMap.put(stop.id, stop);
+                    }
+                    for (RoutesResponse.Route route : mRoutes) {
+                        for (int stopId : route.stops) {
+                            if (stopMap.containsKey(stopId)) {
+                                mStops.add(stopMap.get(stopId));
+                                mStopMap.put(stopId, stopMap.get(stopId));
+                            }
+                        }
                     }
                     Collections.sort(mStops);
+                    for (StopsResponse.Stop stop : mStops) {
+                        Log.d("MainActivity", "STOP RETRIEVED: " + stop.id + " - " + stop.unique_name);
+                    }
                     refreshStops();
                 }
                 else if (mBusResponse instanceof RoutesResponse) {
@@ -192,10 +207,23 @@ public class MainActivity extends Activity {
 
     private void refreshBuses() {
         HashMap<Integer, RoutesResponse.Route> selectedRoutes = mRoutesDrawerFragment.getSelectedItems();
+//        HashMap<Integer, StopsResponse.Stop> selectedStops = mStopsDrawerFragment.getSelectedItems();
         for (BusesResponse.Bus bus : mBuses) {
+            ArrayList<Integer> stops = new ArrayList<Integer>();
+            List<Integer> selectedStops = mStopsDrawerFragment.getSelectedIDs();
+            // check if this bus on a selected route
+            boolean onSelectedStop = false;
+            for (int busStopID : mRouteMap.get(bus.route).stops) {
+                for (int stopID : selectedStops) {
+                    if (busStopID == stopID) {
+                        onSelectedStop = true;
+                    }
+                }
+            }
             // if it's not on a selected route, remove it if possible, then continue
             // unless no routes are selected, in which case, show all buses
-            if (!selectedRoutes.containsKey(bus.route) && !selectedRoutes.isEmpty()) {
+            if ((!selectedRoutes.containsKey(bus.route) && !selectedRoutes.isEmpty())
+                    | (!onSelectedStop && !selectedStops.isEmpty())) {
                 if (mBusMarkers.containsKey(bus.id)) {
                     mBusMarkers.get(bus.id).remove();
                     mBusMarkers.remove(bus.id);
@@ -236,15 +264,6 @@ public class MainActivity extends Activity {
     }
 
     private void refreshStops() {
-        LatLngBounds.Builder builder = LatLngBounds.builder();
-        for (StopsResponse.Stop stop: mStops) {
-            LatLng coordinates = new LatLng(stop.latitude, stop.longitude);
-            builder.include(coordinates);
-        }
-        if (!mStops.isEmpty()) {
-            mVenue = builder.build();
-            mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(mVenue, mPadding));
-        }
         mStopsDrawerFragment.setItems(mStops);
     }
 
@@ -279,5 +298,21 @@ public class MainActivity extends Activity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public void launchRouteDetailActivity(RoutesResponse.Route route) {
+        Toast.makeText(this, "Route info for: " + route.name, Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(this, RouteDetailActivity.class);
+        intent.putExtra("route", route);
+        startActivity(intent);
+        overridePendingTransition(R.anim.slide_left_to_center, R.anim.slide_center_to_right);
+    }
+
+    public void launchStopDetailActivity(StopsResponse.Stop stop) {
+        Toast.makeText(this, "Stop info for: " + stop.unique_name, Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(this, StopDetailActivity.class);
+        intent.putExtra("stop", stop);
+        startActivity(intent);
+        overridePendingTransition(R.anim.slide_right_to_center, R.anim.slide_center_to_left);
     }
 }

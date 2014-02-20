@@ -12,13 +12,11 @@ import com.damianw.maizeways.android.R;
 import com.damianw.maizeways.android.data.HasID;
 
 import java.util.List;
-import java.util.TreeSet;
 
 /**
  * Created by damian on 1/12/14.
  */
 public abstract class MBusDrawerAdapter<ResponseType extends HasID> extends ArrayAdapter<ResponseType> {
-    private TreeSet<Integer> mSelectedItems = new TreeSet<Integer>();
     NavigationDrawerFragment mParent;
 
     public MBusDrawerAdapter(Context context, NavigationDrawerFragment<ResponseType> parent) {
@@ -41,20 +39,12 @@ public abstract class MBusDrawerAdapter<ResponseType extends HasID> extends Arra
         return ((ResponseType) mParent.getItems().get(position)).hashCode();
     }
 
-    public void clickItem(int position) {
-        if (mSelectedItems.contains(position)) {
-            mSelectedItems.remove(position);
-        } else {
-            mSelectedItems.add(position);
-        }
-    }
-
-    public TreeSet<Integer> getSelectedItems() {
-        return mSelectedItems;
-    }
-
     public List<ResponseType> getItems() {
         return mParent.getItems();
+    }
+
+    public NavigationDrawerFragment<ResponseType> getParent() {
+        return mParent;
     }
 
     public void replaceItems(List<ResponseType> items) {

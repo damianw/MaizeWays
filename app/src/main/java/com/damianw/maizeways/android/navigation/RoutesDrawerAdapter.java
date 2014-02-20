@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.damianw.maizeways.android.MainActivity;
 import com.damianw.maizeways.android.R;
 import com.damianw.maizeways.android.data.RoutesResponse;
 
@@ -28,12 +29,23 @@ public class RoutesDrawerAdapter extends MBusDrawerAdapter<RoutesResponse.Route>
             navItemView = convertView;
         }
 
-        RoutesResponse.Route item = getItems().get(position);
+        final RoutesResponse.Route item = getItems().get(position);
 
         TextView text = (TextView) navItemView.findViewById(R.id.routes_drawer_item_text);
         text.setText(item.name);
 
-        if (getSelectedItems().contains(position)) {
+        View button = navItemView.findViewById(R.id.routes_drawer_item_button);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (getContext() instanceof MainActivity) {
+                    MainActivity main = (MainActivity) getContext();
+                    main.launchRouteDetailActivity(item);
+                }
+            }
+        });
+
+        if (getParent().getSelectedIndices().contains(position)) {
             navItemView.setBackgroundResource(android.R.color.black);
         } else {
             navItemView.setBackgroundResource(android.R.color.transparent);

@@ -17,5 +17,10 @@ public class BusesResponse extends MBusResponse<BusesResponse.Bus> {
         public int compareTo(Bus bus) {
             return route_name.compareTo(bus.route_name);
         }
+
+        @Override
+        public int getID() {
+            return id;
+        }
     }
 }

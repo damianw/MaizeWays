@@ -132,7 +132,6 @@ public abstract class NavigationDrawerFragment<ResponseType extends HasID> exten
         if (mDrawerListView != null) {
             mDrawerListView.setItemChecked(position, !currentlySelected);
             // TODO: fix this
-            mAdapter.clickItem(position);
         }
         if (mCallbacks != null) {
             for (NavigationDrawerCallback callback : mCallbacks) {
@@ -150,8 +149,8 @@ public abstract class NavigationDrawerFragment<ResponseType extends HasID> exten
         mItems.clear();
         mItems.addAll(items);
         Log.d("NavigationDrawerFragment", "Should now have " + mItems.size() + " items!");
-        mAdapter.clear();
-        mAdapter.addAll(items);
+//        mAdapter.clear();
+//        mAdapter.addAll(items);
         mAdapter.notifyDataSetChanged();
 //        mItems = items;
 //        refreshItems();
@@ -167,9 +166,25 @@ public abstract class NavigationDrawerFragment<ResponseType extends HasID> exten
     public HashMap<Integer, ResponseType> getSelectedItems() {
         HashMap<Integer, ResponseType> result = new HashMap<Integer, ResponseType>();
         for (int index : getSelectedIndices()) {
-            result.put(mItems.get(index).id, getItems().get(index));
+            result.put(mItems.get(index).getID(), getItems().get(index));
         }
         return result;
+    }
+
+    public ArrayList<Integer> getSelectedIDs() {
+        ArrayList<Integer> result = new ArrayList<Integer>();
+        for (int index : getSelectedIndices()) {
+            result.add(mItems.get(index).getID());
+        }
+        return result;
+    }
+
+    public void clearSelections() {
+        for (int index : mSelectedIndices) {
+            mDrawerListView.setItemChecked(index, false);
+        }
+        mSelectedIndices.clear();
+        mAdapter.notifyDataSetChanged();
     }
 
     /**

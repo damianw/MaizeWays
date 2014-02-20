@@ -61,6 +61,8 @@ public class MBusTask extends AsyncTask<Object, Void, MBusResponse> {
             typedResponse = gson.fromJson(reader, mClassType);
         } catch (IOException e) {
             Log.e("aasx" , e.getMessage());
+        } catch (IllegalStateException e) {
+            Log.e("MBusTask", "Failed to parse JSON for " + mClassType.getSimpleName());
         }
         return typedResponse;
     }

@@ -18,5 +18,10 @@ public class StopsResponse extends MBusResponse<StopsResponse.Stop> {
         public int compareTo(Stop stop) {
             return human_name.compareTo(stop.human_name);
         }
+
+        @Override
+        public int getID() {
+            return id;
+        }
     }
 }

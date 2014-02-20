@@ -43,6 +43,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".RouteDetailActivity"
+            android:label="RouteDetailActivity"
+            />
+        <activity android:name=".StopDetailActivity"
+            android:label="StopDetailActivity"
+            />
     </application>
 
 </manifest>

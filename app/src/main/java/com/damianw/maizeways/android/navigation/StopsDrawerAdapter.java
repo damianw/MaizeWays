@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.damianw.maizeways.android.MainActivity;
 import com.damianw.maizeways.android.R;
 import com.damianw.maizeways.android.data.StopsResponse;
 
@@ -28,17 +29,23 @@ public class StopsDrawerAdapter extends MBusDrawerAdapter<StopsResponse.Stop> {
             navItemView = convertView;
         }
 
-        // debug, remove later
-        if (position - 1> getItems().size()) {
-            return navItemView;
-        }
-
-        StopsResponse.Stop item = getItems().get(position);
+        final StopsResponse.Stop item = getItems().get(position);
 
         TextView text = (TextView) navItemView.findViewById(R.id.stops_drawer_item_text);
-        text.setText(item.human_name);
+        text.setText(item.unique_name);
 
-        if (getSelectedItems().contains(position)) {
+        View button = navItemView.findViewById(R.id.stops_drawer_item_button);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (getContext() instanceof MainActivity) {
+                    MainActivity main = (MainActivity) getContext();
+                    main.launchStopDetailActivity(item);
+                }
+            }
+        });
+
+        if (getParent().getSelectedIndices().contains(position)) {
             navItemView.setBackgroundResource(android.R.color.black);
         } else {
             navItemView.setBackgroundResource(android.R.color.transparent);
