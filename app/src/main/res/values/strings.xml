@@ -17,4 +17,10 @@
     <string name="mbus_routes_endpoint">http://mbus.pts.umich.edu/api/v0/routes/</string>
     <!-- End MBus Business-->
 
+    <!-- UI Strings -->
+    <string name="routes_title">Routes</string>
+    <string name="stops_title">Stops</string>
+    <!-- End UI Strings -->
+
+
 </resources>

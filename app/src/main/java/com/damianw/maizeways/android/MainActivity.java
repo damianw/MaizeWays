@@ -14,8 +14,11 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.damianw.maizeways.android.data.BusesResponse;
@@ -121,11 +124,26 @@ public class MainActivity extends Activity {
         // Set up the drawers and their respective callbacks
         mRoutesDrawerFragment.setUp(
                 routesCallback, new RoutesDrawerAdapter(this, mRoutesDrawerFragment), R.id.routes_drawer,
-                (DrawerLayout) findViewById(R.id.drawer_layout));
+                (DrawerLayout) findViewById(R.id.drawer_layout), true);
         mStopsDrawerFragment.setUp(
                 stopsCallback, new StopsDrawerAdapter(this, mStopsDrawerFragment), R.id.stops_drawer,
-                (DrawerLayout) findViewById(R.id.drawer_layout));
+                (DrawerLayout) findViewById(R.id.drawer_layout), false);
 
+        // custom action bar
+        View abLayout = getLayoutInflater().inflate(R.layout.mbus_actionbar, null);
+        ActionBar.LayoutParams lp = new ActionBar.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                Gravity.RIGHT | Gravity.CENTER_VERTICAL);
+        getActionBar().setCustomView(abLayout, lp);
+
+        View rightDrawerToggle = abLayout.findViewById(R.id.right_drawer_button);
+        rightDrawerToggle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mStopsDrawerFragment.toggleOpen(Gravity.RIGHT);
+            }
+        });
     }
 
     @Override
