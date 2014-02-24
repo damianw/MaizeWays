@@ -124,7 +124,7 @@ public class MainActivity extends Activity {
         // Set up the drawers and their respective callbacks
         mRoutesDrawerFragment.setUp(
                 routesCallback, new RoutesDrawerAdapter(this, mRoutesDrawerFragment), R.id.routes_drawer,
-                (DrawerLayout) findViewById(R.id.drawer_layout), true);
+                (DrawerLayout) findViewById(R.id.drawer_layout), false);
         mStopsDrawerFragment.setUp(
                 stopsCallback, new StopsDrawerAdapter(this, mStopsDrawerFragment), R.id.stops_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout), false);
@@ -132,16 +132,25 @@ public class MainActivity extends Activity {
         // custom action bar
         View abLayout = getLayoutInflater().inflate(R.layout.mbus_actionbar, null);
         ActionBar.LayoutParams lp = new ActionBar.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 Gravity.RIGHT | Gravity.CENTER_VERTICAL);
         getActionBar().setCustomView(abLayout, lp);
+        getActionBar().setHomeButtonEnabled(false);
+        getActionBar().setDisplayHomeAsUpEnabled(false);
 
         View rightDrawerToggle = abLayout.findViewById(R.id.right_drawer_button);
         rightDrawerToggle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 mStopsDrawerFragment.toggleOpen(Gravity.RIGHT);
+            }
+        });
+        View leftDrawerToggle = abLayout.findViewById(R.id.left_drawer_button);
+        leftDrawerToggle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mRoutesDrawerFragment.toggleOpen(Gravity.LEFT);
             }
         });
     }
