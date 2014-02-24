@@ -320,6 +320,10 @@ public abstract class NavigationDrawerFragment<ResponseType extends MBusDataMode
         }
     }
 
+    public void close(int gravity) {
+        mDrawerLayout.closeDrawer(gravity);
+    }
+
     /**
      * Per the navigation drawer design guidelines, updates the action bar to show the global app
      * 'context', rather than just what's in the current screen.

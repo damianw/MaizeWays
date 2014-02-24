@@ -144,6 +144,7 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View view) {
                 mStopsDrawerFragment.toggleOpen(Gravity.RIGHT);
+                mRoutesDrawerFragment.close(Gravity.LEFT);
             }
         });
         View leftDrawerToggle = abLayout.findViewById(R.id.left_drawer_button);
@@ -151,6 +152,7 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View view) {
                 mRoutesDrawerFragment.toggleOpen(Gravity.LEFT);
+                mStopsDrawerFragment.close(Gravity.RIGHT);
             }
         });
     }
